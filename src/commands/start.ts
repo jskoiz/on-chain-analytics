@@ -1,8 +1,6 @@
 import { Telegraf, Context } from 'telegraf';
 import { Markup } from 'telegraf';
 import logger from '../utils/logger';
-import { User } from '../db/models/User';
-import { Alert } from '../db/models/Alert';
 
 /**
  * Registers the /start command with the bot
