@@ -65,65 +65,108 @@ export const formatWalletSummaryHTML = (
   summary: FormattedWalletSummary,
   detailed = false
 ): string => {
-  // Basic wallet info
-  let html = `<b>📊 Wallet Summary</b>\n\n`;
-  html += `<b>Address:</b> <code>${formatAddress(summary.owner)}</code>\n`;
-  html += `<b>SOL Balance:</b> <code>${formatNumber(summary.solBalance)}</code>\n`;
+  // Use table-based layout for wider messages
+  let html = `<div style="width:100%"><b>📊 Wallet Summary</b></div>\n\n`;
+  
+  // Header table with wallet info
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="50%"><b>Address:</b> <code>${formatAddress(summary.owner)}</code></td>
+      <td width="50%"><b>SOL Balance:</b> <code>${formatNumber(summary.solBalance)}</code></td>
+    </tr>`;
   
   if (summary.totalUsdValue !== undefined) {
-    html += `<b>Total USD Value:</b> <code>$${formatNumber(summary.totalUsdValue)}</code>\n\n`;
-  } else {
-    html += '\n';
+    html += `<tr>
+      <td colspan="2"><b>Total USD Value:</b> <code>$${formatNumber(summary.totalUsdValue)}</code></td>
+    </tr>`;
   }
   
-  // Token balances
+  html += `</table>\n\n`;
+  
+  // Token balances with table layout
   if (summary.tokens.length > 0) {
-    html += `<b>🪙 Tokens (${summary.tokens.length})</b>\n`;
+    html += `<div style="width:100%"><b>🪙 Tokens (${summary.tokens.length})</b></div>\n`;
+    html += `<table width="100%" style="border-collapse:collapse">`;
     
     // Sort tokens by USD value (if available)
-    const sortedTokens = [...summary.tokens].sort((a, b) => 
+    const sortedTokens = [...summary.tokens].sort((a, b) =>
       (b.usdValue || 0) - (a.usdValue || 0)
     );
     
     // Limit to top 10 tokens for basic view
     const tokensToShow = detailed ? sortedTokens : sortedTokens.slice(0, 10);
     
-    tokensToShow.forEach(token => {
-      html += `• <b>${escapeHtml(token.symbol)}</b>: <code>${formatNumber(token.balance)}</code>`;
+    // Create rows with two tokens per row for better horizontal space usage
+    for (let i = 0; i < tokensToShow.length; i += 2) {
+      html += `<tr>`;
       
-      if (token.usdValue) {
-        html += ` ($${formatNumber(token.usdValue)})\n`;
-      } else {
-        html += '\n';
+      // First token in row
+      html += `<td width="50%">• <b>${escapeHtml(tokensToShow[i].symbol)}</b>: <code>${formatNumber(tokensToShow[i].balance)}</code>`;
+      if (tokensToShow[i].usdValue !== undefined) {
+        html += ` ($${formatNumber(tokensToShow[i].usdValue as number)})`;
       }
-    });
+      html += `</td>`;
+      
+      // Second token in row (if exists)
+      if (i + 1 < tokensToShow.length) {
+        html += `<td width="50%">• <b>${escapeHtml(tokensToShow[i+1].symbol)}</b>: <code>${formatNumber(tokensToShow[i+1].balance)}</code>`;
+        if (tokensToShow[i+1].usdValue !== undefined) {
+          html += ` ($${formatNumber(tokensToShow[i+1].usdValue as number)})`;
+        }
+        html += `</td>`;
+      } else {
+        html += `<td width="50%"></td>`;
+      }
+      
+      html += `</tr>`;
+    }
+    
+    html += `</table>`;
     
     if (!detailed && summary.tokens.length > 10) {
-      html += `<i>...and ${summary.tokens.length - 10} more tokens</i>\n`;
+      html += `<div style="width:100%"><i>...and ${summary.tokens.length - 10} more tokens</i></div>\n`;
     }
     
     html += '\n';
   }
   
-  // NFT balances
+  // NFT balances with table layout
   if (summary.nfts.length > 0) {
-    html += `<b>🖼 NFTs (${summary.nfts.length})</b>\n`;
+    html += `<div style="width:100%"><b>🖼 NFTs (${summary.nfts.length})</b></div>\n`;
+    html += `<table width="100%" style="border-collapse:collapse">`;
     
     // Limit to top 5 NFTs for basic view
     const nftsToShow = detailed ? summary.nfts : summary.nfts.slice(0, 5);
     
-    nftsToShow.forEach(nft => {
-      html += `• <b>${escapeHtml(nft.name)}</b>`;
+    // Create rows with two NFTs per row
+    for (let i = 0; i < nftsToShow.length; i += 2) {
+      html += `<tr>`;
       
-      if (nft.collection) {
-        html += ` (${escapeHtml(nft.collection)})`;
+      // First NFT in row
+      html += `<td width="50%">• <b>${escapeHtml(nftsToShow[i].name)}</b>`;
+      if (nftsToShow[i].collection !== undefined) {
+        html += ` (${escapeHtml(nftsToShow[i].collection as string)})`;
+      }
+      html += `</td>`;
+      
+      // Second NFT in row (if exists)
+      if (i + 1 < nftsToShow.length) {
+        html += `<td width="50%">• <b>${escapeHtml(nftsToShow[i+1].name)}</b>`;
+        if (nftsToShow[i+1].collection !== undefined) {
+          html += ` (${escapeHtml(nftsToShow[i+1].collection as string)})`;
+        }
+        html += `</td>`;
+      } else {
+        html += `<td width="50%"></td>`;
       }
       
-      html += '\n';
-    });
+      html += `</tr>`;
+    }
+    
+    html += `</table>`;
     
     if (!detailed && summary.nfts.length > 5) {
-      html += `<i>...and ${summary.nfts.length - 5} more NFTs</i>\n`;
+      html += `<div style="width:100%"><i>...and ${summary.nfts.length - 5} more NFTs</i></div>\n`;
     }
   }
   
@@ -140,44 +183,67 @@ export const formatTokenInfoHTML = (
   tokenInfo: FormattedTokenInfo,
   detailed = false
 ): string => {
-  let html = `<b>🪙 Token Information</b>\n\n`;
+  let html = `<div style="width:100%"><b>🪙 Token Information</b></div>\n\n`;
   
-  // Basic token info
-  html += `<b>Name:</b> ${escapeHtml(tokenInfo.name)}\n`;
-  html += `<b>Symbol:</b> ${escapeHtml(tokenInfo.symbol)}\n`;
-  html += `<b>Mint:</b> <code>${formatAddress(tokenInfo.mint)}</code>\n`;
-  html += `<b>Decimals:</b> ${tokenInfo.decimals}\n`;
-  html += `<b>Supply:</b> ${formatNumber(tokenInfo.supply)}\n`;
-  html += `<b>Holders:</b> ${formatNumber(tokenInfo.holders, 0)}\n\n`;
+  // Basic token info in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="50%"><b>Name:</b> ${escapeHtml(tokenInfo.name)}</td>
+      <td width="50%"><b>Symbol:</b> ${escapeHtml(tokenInfo.symbol)}</td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Mint:</b> <code>${formatAddress(tokenInfo.mint)}</code></td>
+      <td width="50%"><b>Decimals:</b> ${tokenInfo.decimals}</td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Supply:</b> ${formatNumber(tokenInfo.supply)}</td>
+      <td width="50%"><b>Holders:</b> ${formatNumber(tokenInfo.holders, 0)}</td>
+    </tr>
+  </table>\n\n`;
   
-  // Price information
+  // Price information in a table layout
   if (tokenInfo.price) {
-    html += `<b>💰 Price Information</b>\n`;
-    html += `<b>Current Price:</b> $${formatNumber(tokenInfo.price.usd)}\n`;
+    html += `<div style="width:100%"><b>💰 Price Information</b></div>\n`;
+    html += `<table width="100%" style="border-collapse:collapse">
+      <tr>
+        <td width="50%"><b>Current Price:</b> $${formatNumber(tokenInfo.price.usd)}</td>`;
     
     if (tokenInfo.price.change24h !== undefined) {
       const changeText = formatPercentage(tokenInfo.price.change24h);
       const changeEmoji = tokenInfo.price.change24h >= 0 ? '🟢' : '🔴';
-      html += `<b>24h Change:</b> ${changeEmoji} ${changeText}\n`;
+      html += `<td width="50%"><b>24h Change:</b> ${changeEmoji} ${changeText}</td>`;
+    } else {
+      html += `<td width="50%"></td>`;
     }
     
+    html += `</tr>`;
+    
     if (tokenInfo.volume?.usd24h) {
-      html += `<b>24h Volume:</b> $${formatNumber(tokenInfo.volume.usd24h)}\n`;
+      html += `<tr>
+        <td width="50%"><b>24h Volume:</b> $${formatNumber(tokenInfo.volume.usd24h)}</td>`;
       
       if (tokenInfo.volume.change24h !== undefined) {
         const volumeChangeText = formatPercentage(tokenInfo.volume.change24h);
-        html += `<b>Volume Change:</b> ${volumeChangeText}\n`;
+        html += `<td width="50%"><b>Volume Change:</b> ${volumeChangeText}</td>`;
+      } else {
+        html += `<td width="50%"></td>`;
       }
+      
+      html += `</tr>`;
     }
     
-    html += '\n';
+    html += `</table>\n\n`;
   }
   
   // Add detailed information if requested
   if (detailed) {
-    html += `<b>🔍 Additional Information</b>\n`;
-    html += `<b>Full Mint Address:</b> <code>${tokenInfo.mint}</code>\n`;
-    // Add more detailed information as needed
+    html += `<div style="width:100%"><b>🔍 Additional Information</b></div>\n`;
+    html += `<table width="100%" style="border-collapse:collapse">
+      <tr>
+        <td width="100%"><b>Full Mint Address:</b> <code>${tokenInfo.mint}</code></td>
+      </tr>
+      <!-- Add more detailed information as needed -->
+    </table>\n`;
   }
   
   return html;
@@ -191,44 +257,65 @@ export const formatTokenInfoHTML = (
 export const formatProgramHealthHTML = (
   programHealth: FormattedProgramHealth
 ): string => {
-  let html = `<b>📊 Program Health</b>\n\n`;
+  let html = `<div style="width:100%"><b>📊 Program Health</b></div>\n\n`;
   
-  // Program ID
-  html += `<b>Program ID:</b> <code>${formatAddress(programHealth.programId)}</code>\n\n`;
+  // Program ID in a full-width table
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="100%"><b>Program ID:</b> <code>${formatAddress(programHealth.programId)}</code></td>
+    </tr>
+  </table>\n\n`;
   
-  // TVL information
-  html += `<b>💰 Total Value Locked (TVL)</b>\n`;
-  html += `<b>Current TVL:</b> $${formatNumber(programHealth.tvl)}\n`;
+  // TVL information in a table layout
+  html += `<div style="width:100%"><b>💰 Total Value Locked (TVL)</b></div>\n`;
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="50%"><b>Current TVL:</b> $${formatNumber(programHealth.tvl)}</td>`;
   
   if (programHealth.tvlChange24h !== undefined) {
     const changeText = formatPercentage(programHealth.tvlChange24h);
     const changeEmoji = programHealth.tvlChange24h >= 0 ? '🟢' : '🔴';
-    html += `<b>24h Change:</b> ${changeEmoji} ${changeText}\n\n`;
+    html += `<td width="50%"><b>24h Change:</b> ${changeEmoji} ${changeText}</td>`;
   } else {
-    html += '\n';
+    html += `<td width="50%"></td>`;
   }
   
-  // User activity
-  html += `<b>👥 User Activity (24h)</b>\n`;
-  html += `<b>Active Users:</b> ${formatNumber(programHealth.activeUsers24h, 0)}\n`;
+  html += `</tr>
+  </table>\n\n`;
+  
+  // User and transaction activity in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td colspan="2"><div style="width:100%"><b>👥 User Activity (24h)</b></div></td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Active Users:</b> ${formatNumber(programHealth.activeUsers24h, 0)}</td>`;
   
   if (programHealth.activeUsersChange24h !== undefined) {
     const changeText = formatPercentage(programHealth.activeUsersChange24h);
     const changeEmoji = programHealth.activeUsersChange24h >= 0 ? '🟢' : '🔴';
-    html += `<b>Change:</b> ${changeEmoji} ${changeText}\n\n`;
+    html += `<td width="50%"><b>Change:</b> ${changeEmoji} ${changeText}</td>`;
   } else {
-    html += '\n';
+    html += `<td width="50%"></td>`;
   }
   
-  // Transaction activity
-  html += `<b>🔄 Transaction Activity (24h)</b>\n`;
-  html += `<b>Transactions:</b> ${formatNumber(programHealth.transactions24h, 0)}\n`;
+  html += `</tr>
+    <tr>
+      <td colspan="2"><div style="width:100%"><b>🔄 Transaction Activity (24h)</b></div></td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Transactions:</b> ${formatNumber(programHealth.transactions24h, 0)}</td>`;
   
   if (programHealth.transactionsChange24h !== undefined) {
     const changeText = formatPercentage(programHealth.transactionsChange24h);
     const changeEmoji = programHealth.transactionsChange24h >= 0 ? '🟢' : '🔴';
-    html += `<b>Change:</b> ${changeEmoji} ${changeText}\n`;
+    html += `<td width="50%"><b>Change:</b> ${changeEmoji} ${changeText}</td>`;
+  } else {
+    html += `<td width="50%"></td>`;
   }
+  
+  html += `</tr>
+  </table>\n`;
   
   return html;
 };
@@ -243,11 +330,15 @@ export const formatAlertTriggerHTML = (
   alert: any,
   currentValue: number
 ): string => {
-  let html = `<b>🚨 Alert Triggered</b>\n\n`;
+  let html = `<div style="width:100%"><b>🚨 Alert Triggered</b></div>\n\n`;
   
   // Alert label if available
   if (alert.label) {
-    html += `<b>Alert:</b> ${escapeHtml(alert.label)}\n\n`;
+    html += `<table width="100%" style="border-collapse:collapse">
+      <tr>
+        <td width="100%"><b>Alert:</b> ${escapeHtml(alert.label)}</td>
+      </tr>
+    </table>\n\n`;
   }
   
   // Format based on alert type
@@ -265,12 +356,16 @@ export const formatAlertTriggerHTML = (
       html += formatActiveUsersAlertHTML(alert, currentValue);
       break;
     default:
-      html += `<b>Condition:</b> ${alert.operator === 'gt' ? 'greater than' : 'less than'} ${alert.condition.threshold}\n`;
-      html += `<b>Current Value:</b> ${formatNumber(currentValue)}\n`;
+      html += `<table width="100%" style="border-collapse:collapse">
+        <tr>
+          <td width="50%"><b>Condition:</b> ${alert.operator === 'gt' ? 'greater than' : 'less than'} ${alert.condition.threshold}</td>
+          <td width="50%"><b>Current Value:</b> ${formatNumber(currentValue)}</td>
+        </tr>
+      </table>\n`;
   }
   
   // Add timestamp
-  html += `\n<i>Triggered at: ${new Date().toISOString()}</i>`;
+  html += `\n<div style="width:100%"><i>Triggered at: ${new Date().toISOString()}</i></div>`;
   
   return html;
 };
@@ -283,22 +378,36 @@ export const formatAlertTriggerHTML = (
  */
 const formatPriceAlertHTML = (alert: any, currentPrice: number): string => {
   const condition = alert.condition;
-  let html = `<b>💰 Price Alert</b>\n`;
+  let html = `<div style="width:100%"><b>💰 Price Alert</b></div>\n`;
   
-  // Token information
-  html += `<b>Asset:</b> ${condition.assetMint}\n`;
+  // Token information in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">`;
   
+  // Asset row
+  html += `<tr>
+    <td width="100%"><b>Asset:</b> ${condition.assetMint}</td>
+  </tr>`;
+  
+  // Quote row (if available)
   if (condition.quoteMint) {
-    html += `<b>Quote:</b> ${condition.quoteMint}\n`;
+    html += `<tr>
+      <td width="100%"><b>Quote:</b> ${condition.quoteMint}</td>
+    </tr>`;
   }
   
+  // Market row (if available)
   if (condition.marketId) {
-    html += `<b>Market:</b> ${condition.marketId}\n`;
+    html += `<tr>
+      <td width="100%"><b>Market:</b> ${condition.marketId}</td>
+    </tr>`;
   }
   
-  // Condition and current value
-  html += `<b>Condition:</b> Price ${condition.operator === 'gt' ? 'above' : 'below'} $${formatNumber(condition.threshold)}\n`;
-  html += `<b>Current Price:</b> $${formatNumber(currentPrice)}\n`;
+  // Condition and current value in a two-column layout
+  html += `<tr>
+    <td width="50%"><b>Condition:</b> Price ${condition.operator === 'gt' ? 'above' : 'below'} $${formatNumber(condition.threshold)}</td>
+    <td width="50%"><b>Current Price:</b> $${formatNumber(currentPrice)}</td>
+  </tr>
+  </table>\n`;
   
   return html;
 };
@@ -311,15 +420,19 @@ const formatPriceAlertHTML = (alert: any, currentPrice: number): string => {
  */
 const formatBalanceAlertHTML = (alert: any, currentBalance: number): string => {
   const condition = alert.condition;
-  let html = `<b>💼 Balance Alert</b>\n`;
+  let html = `<div style="width:100%"><b>💼 Balance Alert</b></div>\n`;
   
-  // Wallet and token information
-  html += `<b>Wallet:</b> ${formatAddress(condition.walletAddress)}\n`;
-  html += `<b>Asset:</b> ${condition.assetMint}\n`;
-  
-  // Condition and current value
-  html += `<b>Condition:</b> Balance ${condition.operator === 'gt' ? 'above' : 'below'} ${formatNumber(condition.threshold)}\n`;
-  html += `<b>Current Balance:</b> ${formatNumber(currentBalance)}\n`;
+  // Wallet and token information in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="50%"><b>Wallet:</b> ${formatAddress(condition.walletAddress)}</td>
+      <td width="50%"><b>Asset:</b> ${condition.assetMint}</td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Condition:</b> Balance ${condition.operator === 'gt' ? 'above' : 'below'} ${formatNumber(condition.threshold)}</td>
+      <td width="50%"><b>Current Balance:</b> ${formatNumber(currentBalance)}</td>
+    </tr>
+  </table>\n`;
   
   return html;
 };
@@ -332,14 +445,18 @@ const formatBalanceAlertHTML = (alert: any, currentBalance: number): string => {
  */
 const formatTVLAlertHTML = (alert: any, currentTVL: number): string => {
   const condition = alert.condition;
-  let html = `<b>📈 TVL Alert</b>\n`;
+  let html = `<div style="width:100%"><b>📈 TVL Alert</b></div>\n`;
   
-  // Program information
-  html += `<b>Program:</b> ${formatAddress(condition.programId)}\n`;
-  
-  // Condition and current value
-  html += `<b>Condition:</b> TVL ${condition.operator === 'gt' ? 'above' : 'below'} $${formatNumber(condition.threshold)}\n`;
-  html += `<b>Current TVL:</b> $${formatNumber(currentTVL)}\n`;
+  // Program information in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="100%"><b>Program:</b> ${formatAddress(condition.programId)}</td>
+    </tr>
+    <tr>
+      <td width="50%"><b>Condition:</b> TVL ${condition.operator === 'gt' ? 'above' : 'below'} $${formatNumber(condition.threshold)}</td>
+      <td width="50%"><b>Current TVL:</b> $${formatNumber(currentTVL)}</td>
+    </tr>
+  </table>\n`;
   
   return html;
 };
@@ -352,19 +469,27 @@ const formatTVLAlertHTML = (alert: any, currentTVL: number): string => {
  */
 const formatActiveUsersAlertHTML = (alert: any, currentUsers: number): string => {
   const condition = alert.condition;
-  let html = `<b>👥 Active Users Alert</b>\n`;
+  let html = `<div style="width:100%"><b>👥 Active Users Alert</b></div>\n`;
   
-  // Program information
-  html += `<b>Program:</b> ${formatAddress(condition.programId)}\n`;
+  // Program information in a table layout
+  html += `<table width="100%" style="border-collapse:collapse">
+    <tr>
+      <td width="100%"><b>Program:</b> ${formatAddress(condition.programId)}</td>
+    </tr>`;
   
-  // Timeframe if available
+  // Timeframe row if available
   if (condition.timeframe) {
-    html += `<b>Timeframe:</b> ${condition.timeframe}\n`;
+    html += `<tr>
+      <td width="100%"><b>Timeframe:</b> ${condition.timeframe}</td>
+    </tr>`;
   }
   
-  // Condition and current value
-  html += `<b>Condition:</b> Active users ${condition.operator === 'gt' ? 'above' : 'below'} ${formatNumber(condition.threshold, 0)}\n`;
-  html += `<b>Current Active Users:</b> ${formatNumber(currentUsers, 0)}\n`;
+  // Condition and current value in a two-column layout
+  html += `<tr>
+    <td width="50%"><b>Condition:</b> Active users ${condition.operator === 'gt' ? 'above' : 'below'} ${formatNumber(condition.threshold, 0)}</td>
+    <td width="50%"><b>Current Active Users:</b> ${formatNumber(currentUsers, 0)}</td>
+  </tr>
+  </table>\n`;
   
   return html;
 };

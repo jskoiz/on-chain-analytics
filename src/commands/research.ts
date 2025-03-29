@@ -411,18 +411,31 @@ Fetching data...
         
         // Format the response - show tokens even if they have zero volume
         const formattedResponse = `
-<b>📊 Top Tokens by Volume (24h)</b>
-
-${sortedTokens.length > 0 ?
-  sortedTokens.map((token, index) => {
-    const volume = `$${(token?.volume || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-    return `${index + 1}. <b>${token?.symbol || 'Unknown'}</b> - ${volume}`;
-  }).join('\n') :
-  'No volume data available at this time.'
-}
-
-<i>Data provided by Vybe API</i>
-`;
+        <div style="width:100%"><b>📊 Top Tokens by Volume (24h)</b></div>
+        
+        ${sortedTokens.length > 0 ?
+          `<table width="100%" style="border-collapse:collapse">` +
+          sortedTokens.map((token, index) => {
+            const volume = `$${(token?.volume || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+            // Create rows with two tokens per row for better horizontal space usage
+            if (index % 2 === 0) {
+              // Start a new row for even indices
+              const nextToken = index + 1 < sortedTokens.length ? sortedTokens[index + 1] : null;
+              const nextVolume = nextToken ? `$${(nextToken?.volume || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : '';
+              
+              return `<tr>
+                <td width="50%">${index + 1}. <b>${token?.symbol || 'Unknown'}</b> - ${volume}</td>
+                ${nextToken ? `<td width="50%">${index + 2}. <b>${nextToken?.symbol || 'Unknown'}</b> - ${nextVolume}</td>` : '<td width="50%"></td>'}
+              </tr>`;
+            }
+            // Skip odd indices as they're handled with the even indices
+            return '';
+          }).filter(row => row !== '').join('') + `</table>` :
+          'No volume data available at this time.'
+        }
+        
+        <div style="width:100%"><i>Data provided by Vybe API</i></div>
+        `;
         
         // Delete loading message
         await ctx.deleteMessage(loadingMessage.message_id);
@@ -498,16 +511,32 @@ Fetching data...
         
         // Format the response
         const formattedResponse = `
-<b>📈 Top Gainers (24h)</b>
-
-${sortedPairs.map((pair, index) => {
-  const priceChange = pair.priceChange24h ? `+${pair.priceChange24h.toFixed(2)}%` : 'N/A';
-  const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
-  return `${index + 1}. <b>${pair.baseSymbol || 'Unknown'}</b> - ${priceChange} (${price})`;
-}).join('\n')}
-
-<i>Data provided by Vybe API</i>
-`;
+        <div style="width:100%"><b>📈 Top Gainers (24h)</b></div>
+        
+        <table width="100%" style="border-collapse:collapse">
+        ${sortedPairs.map((pair, index) => {
+          const priceChange = pair.priceChange24h ? `+${pair.priceChange24h.toFixed(2)}%` : 'N/A';
+          const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+          
+          // Create rows with two pairs per row
+          if (index % 2 === 0) {
+            // Start a new row for even indices
+            const nextPair = index + 1 < sortedPairs.length ? sortedPairs[index + 1] : null;
+            const nextPriceChange = nextPair && nextPair.priceChange24h ? `+${nextPair.priceChange24h.toFixed(2)}%` : 'N/A';
+            const nextPrice = nextPair && nextPair.lastPrice ? `$${nextPair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+            
+            return `<tr>
+              <td width="50%">${index + 1}. <b>${pair.baseSymbol || 'Unknown'}</b> - ${priceChange} (${price})</td>
+              ${nextPair ? `<td width="50%">${index + 2}. <b>${nextPair.baseSymbol || 'Unknown'}</b> - ${nextPriceChange} (${nextPrice})</td>` : '<td width="50%"></td>'}
+            </tr>`;
+          }
+          // Skip odd indices as they're handled with the even indices
+          return '';
+        }).filter(row => row !== '').join('')}
+        </table>
+        
+        <div style="width:100%"><i>Data provided by Vybe API</i></div>
+        `;
         
         // Delete loading message
         await ctx.deleteMessage(loadingMessage.message_id);
@@ -583,16 +612,32 @@ Fetching data...
         
         // Format the response
         const formattedResponse = `
-<b>📉 Top Losers (24h)</b>
-
-${sortedPairs.map((pair, index) => {
-  const priceChange = pair.priceChange24h ? `${pair.priceChange24h.toFixed(2)}%` : 'N/A';
-  const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
-  return `${index + 1}. <b>${pair.baseSymbol || 'Unknown'}</b> - ${priceChange} (${price})`;
-}).join('\n')}
-
-<i>Data provided by Vybe API</i>
-`;
+        <div style="width:100%"><b>📉 Top Losers (24h)</b></div>
+        
+        <table width="100%" style="border-collapse:collapse">
+        ${sortedPairs.map((pair, index) => {
+          const priceChange = pair.priceChange24h ? `${pair.priceChange24h.toFixed(2)}%` : 'N/A';
+          const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+          
+          // Create rows with two pairs per row
+          if (index % 2 === 0) {
+            // Start a new row for even indices
+            const nextPair = index + 1 < sortedPairs.length ? sortedPairs[index + 1] : null;
+            const nextPriceChange = nextPair && nextPair.priceChange24h ? `${nextPair.priceChange24h.toFixed(2)}%` : 'N/A';
+            const nextPrice = nextPair && nextPair.lastPrice ? `$${nextPair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+            
+            return `<tr>
+              <td width="50%">${index + 1}. <b>${pair.baseSymbol || 'Unknown'}</b> - ${priceChange} (${price})</td>
+              ${nextPair ? `<td width="50%">${index + 2}. <b>${nextPair.baseSymbol || 'Unknown'}</b> - ${nextPriceChange} (${nextPrice})</td>` : '<td width="50%"></td>'}
+            </tr>`;
+          }
+          // Skip odd indices as they're handled with the even indices
+          return '';
+        }).filter(row => row !== '').join('')}
+        </table>
+        
+        <div style="width:100%"><i>Data provided by Vybe API</i></div>
+        `;
         
         // Delete loading message
         await ctx.deleteMessage(loadingMessage.message_id);
@@ -666,16 +711,32 @@ Fetching data...
         
         // Format the response
         const formattedResponse = `
-<b>🔄 Top Market Pairs</b>
-
-${topPairs.map((pair, index) => {
-  const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
-  const volume = pair.volume24h ? `$${(pair.volume24h).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'N/A';
-  return `${index + 1}. <b>${pair.baseSymbol || 'Unknown'}/${pair.quoteSymbol || 'Unknown'}</b> - ${price} (Vol: ${volume})`;
-}).join('\n')}
-
-<i>Data provided by Vybe API</i>
-`;
+        <div style="width:100%"><b>🔄 Top Market Pairs</b></div>
+        
+        <table width="100%" style="border-collapse:collapse">
+        ${topPairs.map((pair, index) => {
+          const price = pair.lastPrice ? `$${pair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+          const volume = pair.volume24h ? `$${(pair.volume24h).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'N/A';
+          
+          // Create rows with two pairs per row
+          if (index % 2 === 0) {
+            // Start a new row for even indices
+            const nextPair = index + 1 < topPairs.length ? topPairs[index + 1] : null;
+            const nextPrice = nextPair && nextPair.lastPrice ? `$${nextPair.lastPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}` : 'N/A';
+            const nextVolume = nextPair && nextPair.volume24h ? `$${(nextPair.volume24h).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'N/A';
+            
+            return `<tr>
+              <td width="50%">${index + 1}. <b>${pair.baseSymbol || 'Unknown'}/${pair.quoteSymbol || 'Unknown'}</b> - ${price} (Vol: ${volume})</td>
+              ${nextPair ? `<td width="50%">${index + 2}. <b>${nextPair.baseSymbol || 'Unknown'}/${nextPair.quoteSymbol || 'Unknown'}</b> - ${nextPrice} (Vol: ${nextVolume})</td>` : '<td width="50%"></td>'}
+            </tr>`;
+          }
+          // Skip odd indices as they're handled with the even indices
+          return '';
+        }).filter(row => row !== '').join('')}
+        </table>
+        
+        <div style="width:100%"><i>Data provided by Vybe API</i></div>
+        `;
         
         // Delete loading message
         await ctx.deleteMessage(loadingMessage.message_id);
@@ -783,67 +844,135 @@ Fetching PNL data for wallet <code>${walletAddress.substring(0, 4)}...${walletAd
       const summary7d = pnl7d.summary || {};
       const summary30d = pnl30d.summary || {};
       
-      // Build the PNL analysis message
-      let message = `<b>📈 PNL Analysis</b>\n\n`;
-      message += `<b>Wallet:</b> <code>${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}</code>\n`;
-      message += `<b>Token:</b> ${tokenSymbol} (<code>${tokenAddress.substring(0, 4)}...${tokenAddress.substring(tokenAddress.length - 4)}</code>)\n\n`;
+      // Build the PNL analysis message with table-based layout
+      let message = `<div style="width:100%"><b>📈 PNL Analysis</b></div>\n\n`;
       
-      // PNL Summary
-      message += `<b>PNL Summary</b>\n`;
+      // Wallet and token info in a table
+      message += `<table width="100%" style="border-collapse:collapse">
+        <tr>
+          <td width="50%"><b>Wallet:</b> <code>${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}</code></td>
+          <td width="50%"><b>Token:</b> ${tokenSymbol} (<code>${tokenAddress.substring(0, 4)}...${tokenAddress.substring(tokenAddress.length - 4)}</code>)</td>
+        </tr>
+      </table>\n\n`;
+      
+      // PNL Summary with table layout
+      message += `<div style="width:100%"><b>PNL Summary</b></div>\n`;
+      message += `<table width="100%" style="border-collapse:collapse">`;
       
       // 1-day PNL
       const realized1d = summary1d.realizedPnlUsd || 0;
       const unrealized1d = summary1d.unrealizedPnlUsd || 0;
       const total1d = realized1d + unrealized1d;
-      message += `• 1-day: ${formatPnlValue(total1d)} (${formatPnlValue(realized1d)} realized, ${formatPnlValue(unrealized1d)} unrealized)\n`;
+      message += `<tr>
+        <td width="20%"><b>1-day:</b></td>
+        <td width="25%">Total: ${formatPnlValue(total1d)}</td>
+        <td width="55%">Realized: ${formatPnlValue(realized1d)}, Unrealized: ${formatPnlValue(unrealized1d)}</td>
+      </tr>`;
       
       // 7-day PNL
       const realized7d = summary7d.realizedPnlUsd || 0;
       const unrealized7d = summary7d.unrealizedPnlUsd || 0;
       const total7d = realized7d + unrealized7d;
-      message += `• 7-day: ${formatPnlValue(total7d)} (${formatPnlValue(realized7d)} realized, ${formatPnlValue(unrealized7d)} unrealized)\n`;
+      message += `<tr>
+        <td width="20%"><b>7-day:</b></td>
+        <td width="25%">Total: ${formatPnlValue(total7d)}</td>
+        <td width="55%">Realized: ${formatPnlValue(realized7d)}, Unrealized: ${formatPnlValue(unrealized7d)}</td>
+      </tr>`;
       
       // 30-day PNL
       const realized30d = summary30d.realizedPnlUsd || 0;
       const unrealized30d = summary30d.unrealizedPnlUsd || 0;
       const total30d = realized30d + unrealized30d;
-      message += `• 30-day: ${formatPnlValue(total30d)} (${formatPnlValue(realized30d)} realized, ${formatPnlValue(unrealized30d)} unrealized)\n`;
+      message += `<tr>
+        <td width="20%"><b>30-day:</b></td>
+        <td width="25%">Total: ${formatPnlValue(total30d)}</td>
+        <td width="55%">Realized: ${formatPnlValue(realized30d)}, Unrealized: ${formatPnlValue(unrealized30d)}</td>
+      </tr>`;
       
-      // Trading Stats (if available)
+      message += `</table>\n`;
+      
+      // Trading Stats (if available) with table layout
       if (summary7d.winRate !== undefined || summary7d.tradesCount !== undefined) {
-        message += `\n<b>Trading Stats (7-day)</b>\n`;
+        message += `\n<div style="width:100%"><b>Trading Stats (7-day)</b></div>\n`;
+        message += `<table width="100%" style="border-collapse:collapse">`;
         
-        if (summary7d.winRate !== undefined) {
-          message += `• Win Rate: ${summary7d.winRate.toFixed(2)}%\n`;
+        // First row with win rate and trades count
+        if (summary7d.winRate !== undefined || summary7d.tradesCount !== undefined) {
+          message += `<tr>`;
+          
+          if (summary7d.winRate !== undefined) {
+            message += `<td width="50%"><b>Win Rate:</b> ${summary7d.winRate.toFixed(2)}%</td>`;
+          } else {
+            message += `<td width="50%"></td>`;
+          }
+          
+          if (summary7d.tradesCount !== undefined) {
+            message += `<td width="50%"><b>Trades:</b> ${summary7d.tradesCount}</td>`;
+          } else {
+            message += `<td width="50%"></td>`;
+          }
+          
+          message += `</tr>`;
         }
         
-        if (summary7d.tradesCount !== undefined) {
-          message += `• Trades: ${summary7d.tradesCount}\n`;
+        // Second row with winning/losing trades and average trade size
+        if (summary7d.winningTradesCount !== undefined || summary7d.averageTradeUsd !== undefined) {
+          message += `<tr>`;
+          
+          if (summary7d.winningTradesCount !== undefined && summary7d.losingTradesCount !== undefined) {
+            message += `<td width="50%"><b>Winning/Losing Trades:</b> ${summary7d.winningTradesCount}/${summary7d.losingTradesCount}</td>`;
+          } else {
+            message += `<td width="50%"></td>`;
+          }
+          
+          if (summary7d.averageTradeUsd !== undefined) {
+            message += `<td width="50%"><b>Average Trade Size:</b> $${formatNumber(summary7d.averageTradeUsd)}</td>`;
+          } else {
+            message += `<td width="50%"></td>`;
+          }
+          
+          message += `</tr>`;
         }
         
-        if (summary7d.winningTradesCount !== undefined && summary7d.losingTradesCount !== undefined) {
-          message += `• Winning/Losing Trades: ${summary7d.winningTradesCount}/${summary7d.losingTradesCount}\n`;
-        }
-        
-        if (summary7d.averageTradeUsd !== undefined) {
-          message += `• Average Trade Size: $${formatNumber(summary7d.averageTradeUsd)}\n`;
-        }
-        
+        // Third row with trading volume
         if (summary7d.tradesVolumeUsd !== undefined) {
-          message += `• Trading Volume: $${formatNumber(summary7d.tradesVolumeUsd)}\n`;
+          message += `<tr>
+            <td width="100%" colspan="2"><b>Trading Volume:</b> $${formatNumber(summary7d.tradesVolumeUsd)}</td>
+          </tr>`;
         }
+        
+        message += `</table>\n`;
       }
       
-      // PNL Trend (if available)
+      // PNL Trend (if available) with table layout
       if (summary7d.pnlTrendSevenDays && Array.isArray(summary7d.pnlTrendSevenDays) && summary7d.pnlTrendSevenDays.length > 0) {
-        message += `\n<b>7-day PNL Trend</b>\n`;
+        message += `\n<div style="width:100%"><b>7-day PNL Trend</b></div>\n`;
+        message += `<table width="100%" style="border-collapse:collapse">`;
         
-        summary7d.pnlTrendSevenDays.forEach((dataPoint: [number, number]) => {
-          const date = new Date(dataPoint[0]);
-          const pnl = dataPoint[1];
-          const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
-          message += `• ${formattedDate}: ${formatPnlValue(pnl)}\n`;
-        });
+        // Create rows with multiple data points per row for better horizontal space usage
+        for (let i = 0; i < summary7d.pnlTrendSevenDays.length; i += 2) {
+          message += `<tr>`;
+          
+          // First data point
+          const date1 = new Date(summary7d.pnlTrendSevenDays[i][0]);
+          const pnl1 = summary7d.pnlTrendSevenDays[i][1];
+          const formattedDate1 = `${date1.getMonth() + 1}/${date1.getDate()}`;
+          message += `<td width="50%"><b>${formattedDate1}:</b> ${formatPnlValue(pnl1)}</td>`;
+          
+          // Second data point (if exists)
+          if (i + 1 < summary7d.pnlTrendSevenDays.length) {
+            const date2 = new Date(summary7d.pnlTrendSevenDays[i + 1][0]);
+            const pnl2 = summary7d.pnlTrendSevenDays[i + 1][1];
+            const formattedDate2 = `${date2.getMonth() + 1}/${date2.getDate()}`;
+            message += `<td width="50%"><b>${formattedDate2}:</b> ${formatPnlValue(pnl2)}</td>`;
+          } else {
+            message += `<td width="50%"></td>`;
+          }
+          
+          message += `</tr>`;
+        }
+        
+        message += `</table>\n`;
       }
       
       // Delete loading message
@@ -1332,60 +1461,116 @@ Fetching extended data for wallet <code>${walletAddress}</code>...
       const entityName = knownAccountResponse?.data?.[0]?.entityName || null;
       const friendlyName = knownAccountResponse?.data?.[0]?.name || null;
       
-      // Build a detailed summary message
-      let message = `<b>🔍 Extended Wallet Analysis</b>\n\n`;
-      message += `<b>Address:</b> <code>${walletAddress}</code>\n`;
+      // Build a detailed summary message with table-based layout
+      let message = `<div style="width:100%"><b>🔍 Extended Wallet Analysis</b></div>\n\n`;
+      
+      // Basic wallet info in a table
+      message += `<table width="100%" style="border-collapse:collapse">
+        <tr>
+          <td width="100%"><b>Address:</b> <code>${walletAddress}</code></td>
+        </tr>`;
       
       // If known labels or entity
       if (knownLabels.length > 0) {
-        message += `<b>Labels:</b> ${knownLabels.join(', ')}\n`;
+        message += `<tr>
+          <td width="100%"><b>Labels:</b> ${knownLabels.join(', ')}</td>
+        </tr>`;
       }
       if (friendlyName) {
-        message += `<b>Friendly Name:</b> ${friendlyName}\n`;
+        message += `<tr>
+          <td width="100%"><b>Friendly Name:</b> ${friendlyName}</td>
+        </tr>`;
       }
       if (entityName) {
-        message += `<b>Entity:</b> ${entityName}\n`;
+        message += `<tr>
+          <td width="100%"><b>Entity:</b> ${entityName}</td>
+        </tr>`;
       }
       
       // Add total USD value from wallet summary
       if (walletSummary.totalUsdValue !== undefined) {
-        message += `<b>Total USD Value:</b> <code>$${formatNumber(walletSummary.totalUsdValue)}</code>\n`;
+        message += `<tr>
+          <td width="100%"><b>Total USD Value:</b> <code>$${formatNumber(walletSummary.totalUsdValue)}</code></td>
+        </tr>`;
       }
       
-      // PnL data
-      message += `\n<b>📈 PnL & Trading Stats</b>\n`;
-      message += `• 1d Realized PnL: $${formatNumber(pnl1d.realizedPnlUsd || 0)}\n`;
-      message += `• 7d Realized PnL: $${formatNumber(pnl7d.realizedPnlUsd || 0)}\n`;
-      message += `• 30d Realized PnL: $${formatNumber(pnl30d.realizedPnlUsd || 0)}\n`;
+      message += `</table>\n`;
+      
+      // PnL data in a table
+      message += `\n<div style="width:100%"><b>📈 PnL & Trading Stats</b></div>\n`;
+      message += `<table width="100%" style="border-collapse:collapse">
+        <tr>
+          <td width="50%"><b>1d Realized PnL:</b> $${formatNumber(pnl1d.realizedPnlUsd || 0)}</td>
+          <td width="50%"><b>7d Realized PnL:</b> $${formatNumber(pnl7d.realizedPnlUsd || 0)}</td>
+        </tr>
+        <tr>
+          <td width="50%"><b>30d Realized PnL:</b> $${formatNumber(pnl30d.realizedPnlUsd || 0)}</td>`;
       
       // Unrealized PnL if available
       if (pnl7d.unrealizedPnlUsd !== undefined) {
-        message += `• 7d Unrealized PnL: $${formatNumber(pnl7d.unrealizedPnlUsd || 0)}\n`;
+        message += `<td width="50%"><b>7d Unrealized PnL:</b> $${formatNumber(pnl7d.unrealizedPnlUsd || 0)}</td>`;
+      } else {
+        message += `<td width="50%"></td>`;
       }
       
-      // Highlight big winners/losers from the PnL token breakdown if available
+      message += `</tr>
+      </table>\n`;
+      
+      // Highlight big winners/losers from the PnL token breakdown if available with table layout
       if (pnl7d.tokens && Array.isArray(pnl7d.tokens) && pnl7d.tokens.length > 0) {
         // Sort by realizedPnlUsd desc, pick top 3
-        const sortedByPnl = [...pnl7d.tokens].sort((a, b) => 
+        const sortedByPnl = [...pnl7d.tokens].sort((a, b) =>
           (b.realizedPnlUsd || 0) - (a.realizedPnlUsd || 0)
         );
         
         const topGainers = sortedByPnl.slice(0, 3);
         if (topGainers.length > 0) {
-          message += `\n<b>Top Gainers (7d):</b>\n`;
-          topGainers.forEach((t) => {
-            message += `• ${t.tokenSymbol || 'Unknown'}: $${formatNumber(t.realizedPnlUsd || 0)} realized PnL\n`;
-          });
+          message += `\n<div style="width:100%"><b>Top Gainers (7d):</b></div>\n`;
+          message += `<table width="100%" style="border-collapse:collapse">`;
+          
+          // Create rows with two tokens per row
+          for (let i = 0; i < topGainers.length; i += 2) {
+            message += `<tr>`;
+            
+            // First token
+            message += `<td width="50%"><b>${topGainers[i].tokenSymbol || 'Unknown'}:</b> $${formatNumber(topGainers[i].realizedPnlUsd || 0)}</td>`;
+            
+            // Second token (if exists)
+            if (i + 1 < topGainers.length) {
+              message += `<td width="50%"><b>${topGainers[i+1].tokenSymbol || 'Unknown'}:</b> $${formatNumber(topGainers[i+1].realizedPnlUsd || 0)}</td>`;
+            } else {
+              message += `<td width="50%"></td>`;
+            }
+            
+            message += `</tr>`;
+          }
+          
+          message += `</table>\n`;
         }
         
-        const topLosers = sortedByPnl.slice(-3).reverse(); // last 3
-        if (topLosers.length > 0 && topLosers[0].realizedPnlUsd < 0) {
-          message += `\n<b>Top Losers (7d):</b>\n`;
-          topLosers.forEach((t) => {
-            if (t.realizedPnlUsd < 0) {
-              message += `• ${t.tokenSymbol || 'Unknown'}: $${formatNumber(t.realizedPnlUsd || 0)} realized PnL\n`;
+        const topLosers = sortedByPnl.slice(-3).reverse().filter(t => t.realizedPnlUsd < 0); // last 3 with negative PnL
+        if (topLosers.length > 0) {
+          message += `\n<div style="width:100%"><b>Top Losers (7d):</b></div>\n`;
+          message += `<table width="100%" style="border-collapse:collapse">`;
+          
+          // Create rows with two tokens per row
+          for (let i = 0; i < topLosers.length; i += 2) {
+            message += `<tr>`;
+            
+            // First token
+            message += `<td width="50%"><b>${topLosers[i].tokenSymbol || 'Unknown'}:</b> $${formatNumber(topLosers[i].realizedPnlUsd || 0)}</td>`;
+            
+            // Second token (if exists)
+            if (i + 1 < topLosers.length) {
+              message += `<td width="50%"><b>${topLosers[i+1].tokenSymbol || 'Unknown'}:</b> $${formatNumber(topLosers[i+1].realizedPnlUsd || 0)}</td>`;
+            } else {
+              message += `<td width="50%"></td>`;
             }
-          });
+            
+            message += `</tr>`;
+          }
+          
+          message += `</table>\n`;
         }
       }
       
@@ -1469,35 +1654,55 @@ Fetching extended data for wallet <code>${walletAddress}</code>...
         }
       }
       
-      // Current Balances (top 5 by USD value)
+      // Current Balances (top 5 by USD value) with table layout
       if (currentBalances && currentBalances.data) {
-        message += `\n<b>💰 Current Balances</b>\n`;
+        message += `\n<div style="width:100%"><b>💰 Current Balances</b></div>\n`;
         
         // Process token data from the response
-        const tokenData = currentBalances && typeof currentBalances === 'object' && 'data' in currentBalances ? 
-          (currentBalances.data && typeof currentBalances.data === 'object' && 'data' in currentBalances.data && Array.isArray(currentBalances.data.data) ? 
-            currentBalances.data.data : 
+        const tokenData = currentBalances && typeof currentBalances === 'object' && 'data' in currentBalances ?
+          (currentBalances.data && typeof currentBalances.data === 'object' && 'data' in currentBalances.data && Array.isArray(currentBalances.data.data) ?
+            currentBalances.data.data :
             (Array.isArray(currentBalances.data) ? currentBalances.data : [])
           ) : [];
         
         if (tokenData.length > 0) {
           // Sort by valueUsd desc
-          const sortedTokens = [...tokenData].sort((a, b) => 
+          const sortedTokens = [...tokenData].sort((a, b) =>
             parseFloat(b.valueUsd || '0') - parseFloat(a.valueUsd || '0')
           );
           
           const topTokens = sortedTokens.slice(0, 5);
-          topTokens.forEach((token) => {
-            const amount = parseFloat(token.amount || '0');
-            const valueUsd = parseFloat(token.valueUsd || '0');
-            message += `• <b>${token.symbol || 'Unknown'}</b>: ${formatNumber(amount)} ($${formatNumber(valueUsd)})\n`;
-          });
+          
+          message += `<table width="100%" style="border-collapse:collapse">`;
+          
+          // Create rows with two tokens per row
+          for (let i = 0; i < topTokens.length; i += 2) {
+            message += `<tr>`;
+            
+            // First token
+            const amount1 = parseFloat(topTokens[i].amount || '0');
+            const valueUsd1 = parseFloat(topTokens[i].valueUsd || '0');
+            message += `<td width="50%"><b>${topTokens[i].symbol || 'Unknown'}:</b> ${formatNumber(amount1)} ($${formatNumber(valueUsd1)})</td>`;
+            
+            // Second token (if exists)
+            if (i + 1 < topTokens.length) {
+              const amount2 = parseFloat(topTokens[i+1].amount || '0');
+              const valueUsd2 = parseFloat(topTokens[i+1].valueUsd || '0');
+              message += `<td width="50%"><b>${topTokens[i+1].symbol || 'Unknown'}:</b> ${formatNumber(amount2)} ($${formatNumber(valueUsd2)})</td>`;
+            } else {
+              message += `<td width="50%"></td>`;
+            }
+            
+            message += `</tr>`;
+          }
+          
+          message += `</table>`;
           
           if (tokenData.length > 5) {
-            message += `...and ${tokenData.length - 5} more tokens.\n`;
+            message += `<div style="width:100%">...and ${tokenData.length - 5} more tokens.</div>\n`;
           }
         } else {
-          message += `• No token balances found\n`;
+          message += `<div style="width:100%">• No token balances found</div>\n`;
         }
       }
       

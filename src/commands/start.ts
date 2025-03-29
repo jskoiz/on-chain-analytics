@@ -57,25 +57,15 @@ export const registerStartCommand = (bot: Telegraf<Context>): void => {
 <b>Solana</b> · <i>ℹ️</i>
 <code>${walletAddress}</code> <i>(Tap to copy)</i>
 Balance: ${solBalance.toFixed(3)} SOL ($${usdValue.toFixed(2)})
-—
-Click on the Refresh button to update your current balance.
-
-Join our Telegram group @SolanaResearchGroup and follow us on <a href="https://twitter.com/SolanaResearch">Twitter</a>!
 
 💡 Use the buttons below to access all features:
 `;
       } else {
         // No wallet - show standard welcome
         welcomeMessage = `
-<b>👋 Welcome to the Solana Research Bot!</b>
+<b>👋 Welcome to the On-Chain Analysis Bot!</b>
 
-This bot provides real-time and historical Solana research, analytics, and notifications.
-
-To get started, add your Solana wallet address using the Wallet Management button.
-
-Join our Telegram group @SolanaResearchGroup and follow us on <a href="https://twitter.com/SolanaResearch">Twitter</a>!
-
-Use the buttons below to navigate:
+OCA-bot provides real-time and historical Solana research, analytics, and notifications via the Vybe API
 `;
       }
       
