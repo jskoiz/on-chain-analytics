@@ -11,20 +11,36 @@ A Telegram bot for real-time and historical Solana research, analytics, and noti
 
 ```
 jskoiz-on-chain-analytics/
-├── LICENSE
-├── package.json
-├── tsconfig.json
-├── .env.example
+├── README.md               
+├── LICENSE                
+├── package.json           
+├── tsconfig.json         
+├── .env.example           
 └── src/
-    ├── app.d.ts
-    ├── app.ts
-    ├── index.ts
-    ├── commands/          # Commands for /start, /help, /wallet, /research, /alerts
-    ├── config/            # Environment and configuration setup
-    ├── db/                # MongoDB connection and models (User, Alert)
-    ├── modules/           # Vybe API/logic
-    ├── services/          # Background services (alert scheduler)
-    └── utils/             # Logging and formatting utilities
+    ├── app.ts              # Main File - Sets up the tg bot, connects to DB, initializes the Vybe API, registers commands, and starts alert scheduler.
+    ├── index.ts            # Entry point that starts the App and handles graceful shutdown signals.
+    ├── commands/           
+    │   ├── alerts.ts       # Implements the /alerts command and its sub-actions (create, list, delete alerts).
+    │   ├── help.ts         # Implements the /help command (displays usage instructions).
+    │   ├── index.ts        # Aggregates registration of all commands with the bot instance.
+    │   ├── research.ts     # Implements the /research command and related research tool actions.
+    │   ├── start.ts        # Implements the /start command (displays main menu with inline keyboards).
+    │   └── wallet.ts       # Implements the /wallet command for managing wallet addresses (add, remove, list).
+    ├── config/             
+    │   └── index.ts        # Loads, validates, and exports environment variables.
+    ├── db/                 
+    │   ├── index.ts        # Handles connection to MongoDB using Mongoose.
+    │   └── models/         # Contains mongodb schemas and models.
+    │       ├── Alert.ts    # Defines the Alert schema/model (for user alert configurations).
+    │       └── User.ts     # Defines the User schema/model (for Telegram user data and wallet addresses).
+    ├── modules/            
+    │   └── vybeApi.ts      # Wrapper for the Vybe API: initializes the SDK, applies rate limiting, and provides typed API functions.
+    ├── services/           
+    │   └── alertScheduler.ts  # Schedules and executes periodic alert checks and sends notifications.
+    └── utils/              
+        ├── formatters.ts   # Functions to format data (wallet, token, program info) into HTML for Telegram.
+        └── logger.ts       # Configured Winston logger for structured logging.
+
 ```
 
 ## Prerequisites

@@ -219,10 +219,11 @@ const callVybeApi = async <T, P>(
 
 /**
  * Get known accounts from Vybe API
+ * @param params Optional parameters including ownerAddress
  * @returns List of known accounts
  */
-export const getKnownAccounts = async (): Promise<any> => {
-  return callVybeApi('get_known_accounts', {});
+export const getKnownAccounts = async (params: { ownerAddress?: string } = {}): Promise<any> => {
+  return callVybeApi('get_known_accounts', params);
 };
 
 /**
@@ -356,7 +357,7 @@ export const getProgramTransactionCount = async (
  * @returns Token information
  */
 export const getTokenInfo = async (mintAddress: string): Promise<any> => {
-  return callVybeApi('get_token_details', { mintAddress });
+  return callVybeApi('get_token_info', { mintAddress });
 };
 
 /**
@@ -431,6 +432,33 @@ export const getTokenVolumeTimeSeries = async (params: {
   }
   
   return callVybeApi('get_token_volume_time_series', params);
+};
+
+/**
+ * Get wallet PnL (Profit and Loss) information
+ * @param walletAddress Wallet address
+ * @param tokenAddress Token address to filter PnL data (required by the API)
+ * @param resolution Time resolution (e.g., "1d", "7d", "30d")
+ * @returns Wallet PnL information
+ */
+export const getWalletPnL = async (walletAddress: string, tokenAddress: string, resolution: string = "7d"): Promise<any> => {
+  return callVybeApi('get_wallet_pnl', {
+    ownerAddress: walletAddress,
+    tokenAddress,
+    resolution
+  });
+};
+
+/**
+ * Get time-series token balances for a wallet
+ * @param params Parameters including ownerAddress and days
+ * @returns Time-series token balances
+ */
+export const getWalletTokensTS = async (params: { 
+  ownerAddress: string; 
+  days: number;
+}): Promise<any> => {
+  return callVybeApi('get_wallet_tokens_ts', params);
 };
 
 // ===== Higher-level functions =====
