@@ -1391,14 +1391,51 @@ Example: <code>EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</code> (USDC)
   });
   
   // Handle back to research action
-  bot.action('research', (ctx) => {
-    ctx.answerCbQuery();
-    ctx.reply('/research', { parse_mode: 'HTML' });
+  bot.action('research', async (ctx) => {
+    try {
+      ctx.answerCbQuery();
+      
+      // Research message
+      const researchMessage = `
+<b>🔍 Solana Research</b>
+
+Access various research tools for Solana data.
+
+Select an option:
+`;
+      // Research keyboard
+      const keyboard = Markup.inlineKeyboard([
+        [
+          Markup.button.callback('💼 Wallet Analysis', 'research_wallet'),
+          Markup.button.callback('🪙 Token Deep Dive', 'research_token')
+        ],
+        [
+          Markup.button.callback('📈 PNL Analysis', 'research_pnl'),
+          Markup.button.callback('� Market Data', 'research_market')
+        ],
+        [
+          Markup.button.callback('🏛 Protocol Health', 'research_protocol'),
+          Markup.button.callback('🔙 Back to Main Menu', 'back_to_main')
+        ]
+      ]);
+
+      await ctx.reply(researchMessage, {
+        parse_mode: 'HTML',
+        ...keyboard
+      });
+    } catch (error) {
+      logger.error('Error in back to research action', { error, from: ctx.from?.id });
+      await ctx.reply('An error occurred while returning to the Research menu.', {
+        parse_mode: 'HTML'
+      });
+    }
   });
   
   // Helper function to analyze a wallet with extended information
+
   const analyzeWalletExtended = async (ctx: any, walletAddress: string) => {
     try {
+      logger.debug('Starting extended wallet analysis', { walletAddress });
       // Send loading message
       const loadingMessage = await ctx.reply(`
 <b>💼 Analyzing Wallet</b>
@@ -1487,12 +1524,20 @@ Fetching extended data for wallet <code>${walletAddress}</code>...
         </tr>`;
       }
       
-      // Add total USD value from wallet summary
+      // Add total USD value from wallet summary or recalc fallback
+      let totalUsdValue: number;
       if (walletSummary.totalUsdValue !== undefined) {
-        message += `<tr>
-          <td width="100%"><b>Total USD Value:</b> <code>$${formatNumber(walletSummary.totalUsdValue)}</code></td>
-        </tr>`;
+        totalUsdValue = walletSummary.totalUsdValue;
+      } else {
+        const tokenDataArr: any[] = currentBalances && currentBalances.data && Array.isArray(currentBalances.data.data)
+          ? currentBalances.data.data
+          : (Array.isArray(currentBalances.data) ? currentBalances.data : []);
+        totalUsdValue = tokenDataArr.reduce((sum: number, token: any) => sum + parseFloat(token.valueUsd || '0'), 0);
+        logger.debug('Recalculated totalUsdValue from token array', { totalUsdValue });
       }
+      message += `<tr>
+        <td width="100%"><b>Total USD Value:</b> <code>$${formatNumber(totalUsdValue)}</code></td>
+      </tr>`;
       
       message += `</table>\n`;
       
@@ -1707,12 +1752,34 @@ Fetching extended data for wallet <code>${walletAddress}</code>...
       }
       
       // Delete loading message
-      await ctx.deleteMessage(loadingMessage.message_id);
+      try {
+        await ctx.deleteMessage(loadingMessage.message_id);
+      } catch (telegramError) {
+        logger.warn('Failed to delete loading message', { error: telegramError });
+      }
       
-      // Send extended wallet analysis
-      await ctx.reply(message, {
-        parse_mode: 'HTML'
-      });
+      // Send extended wallet analysis in chunks to avoid Telegram limits
+      try {
+        const sanitizedMessage = message
+          .replace(/<div[^>]*>/g, '')
+          .replace(/<\/div>/g, '\n')
+          .replace(/<table[^>]*>/g, '')
+          .replace(/<\/table>/g, '\n')
+          .replace(/<tr>/g, '')
+          .replace(/<\/tr>/g, '\n')
+          .replace(/<td[^>]*>/g, '')
+          .replace(/<\/td>/g, ' ')
+          .trim();
+        const maxMessageLength = 4000;
+        let offset = 0;
+        while (offset < sanitizedMessage.length) {
+          const chunk = sanitizedMessage.slice(offset, offset + maxMessageLength);
+          await ctx.reply(chunk, { parse_mode: 'HTML' });
+          offset += maxMessageLength;
+        }
+      } catch (telegramError) {
+        logger.warn('Failed to send extended wallet analysis', { error: telegramError });
+      }
       
       // Send options for further analysis
       const keyboard = Markup.inlineKeyboard([
@@ -1725,10 +1792,14 @@ Fetching extended data for wallet <code>${walletAddress}</code>...
         ]
       ]);
       
-      await ctx.reply('What would you like to do next?', {
-        parse_mode: 'HTML',
-        ...keyboard
-      });
+      try {
+        await ctx.reply('What would you like to do next?', {
+          parse_mode: 'HTML',
+          ...keyboard
+        });
+      } catch (telegramError) {
+        logger.warn('Failed to send next actions keyboard', { error: telegramError });
+      }
       
       logger.info('Analyzed wallet with extended data', { walletAddress, from: ctx.from?.id });
     } catch (error) {

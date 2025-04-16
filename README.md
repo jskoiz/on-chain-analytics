@@ -1,7 +1,3 @@
-Below is a basic README geared towards developers:
-
----
-
 # Solana Analysis Telegram Bot
 
 A Telegram bot for real-time and historical Solana research, analytics, and notifications using the Vybe API. Designed for one-on-one (DM) interactions with users and built with Node.js, TypeScript, and MongoDB.

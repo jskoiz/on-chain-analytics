@@ -85,13 +85,25 @@ const limiter = new Bottleneck({
  */
 export const initVybeApi = (): void => {
   try {
+    // Check if API key is available
+    if (!config.vybeApiKey) {
+      throw new Error('Vybe API key is missing in configuration');
+    }
+    
     // Log the API structure before initialization
     logger.debug('Vybe API structure before initialization', {
       keys: Object.keys(vybeApi),
       hasAuth: typeof vybeApi.auth === 'function',
       sdkType: typeof vybeApi,
       isDefault: vybeApiSdk.default !== undefined,
+      apiKeyLength: config.vybeApiKey.length,
+      apiKeyPrefix: config.vybeApiKey.substring(0, 4) + '...'
     });
+    
+    // Check if auth method exists
+    if (typeof vybeApi.auth !== 'function') {
+      throw new Error('Vybe API auth method is not available');
+    }
     
     // Initialize the real API
     vybeApi.auth(config.vybeApiKey);
@@ -472,10 +484,16 @@ export const getWalletSummary = async (
   ownerAddress: string
 ): Promise<FormattedWalletSummary> => {
   try {
-    // Get token and NFT balances in parallel
+    // Get token and NFT balances in parallel, handling errors gracefully
     const [tokenBalanceResponse, nftBalanceResponse] = await Promise.all([
-      getTokenBalance(ownerAddress),
-      getNftBalance(ownerAddress)
+      getTokenBalance(ownerAddress).catch((error) => {
+        logger.debug('Failed to fetch token balances in getWalletSummary', { error, ownerAddress });
+        return { data: [] };
+      }),
+      getNftBalance(ownerAddress).catch((error) => {
+        logger.debug('Failed to fetch NFT balances in getWalletSummary', { error, ownerAddress });
+        return { nfts: [] };
+      })
     ]);
     
     // Log the token balance response for debugging
